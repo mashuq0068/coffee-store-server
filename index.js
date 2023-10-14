@@ -8,7 +8,7 @@ app.use(express.json())
 
 
 
-const { MongoClient, ServerApiVersion } = require('mongodb');
+const { MongoClient, ServerApiVersion, ObjectId } = require('mongodb');
 const uri = `mongodb+srv://${process.env.DB_USER}:${process.env.DB_PASS}@cluster0.hxdwxas.mongodb.net/?retryWrites=true&w=majority`;
 
 
@@ -33,11 +33,45 @@ async function run() {
        const allCoffee = await cursor.toArray()
        res.send(allCoffee)
     })
+    app.get('/coffee/:id' , async(req , res)=>{
+       const id = req.params.id
+       const query = {_id:new ObjectId(id)}
+       const coffee = await coffeeCollection.findOne(query)
+       res.send(coffee)
+    })
     app.post('/allCoffee' , async(req , res)=>{
         const coffee = req.body
         console.log(coffee)
         const result = await coffeeCollection.insertOne(coffee)
         res.send(result)
+    })
+    app.put('/allCoffee/:id' , async(req , res)=>{
+      const coffee = req.body
+       const id = req.params.id
+       const filter = {_id: new ObjectId(id)}
+       const options = { upsert: true };
+       const updatedCoffee = {
+        $set:{
+          name:coffee.name,
+          photo:coffee.photo,
+          chef:coffee.chef,
+          price:coffee.price
+
+        }
+       }
+       const result = await coffeeCollection.updateOne(filter , updatedCoffee , options)
+       res.send(result)
+
+    })
+    app.delete('/allCoffee/:id' , async(req , res)=>{
+       const id = req.params.id
+       const query = {_id : new ObjectId(id)}
+       const result = await coffeeCollection.deleteOne(query)
+       res.send(result)
+    })
+    app.delete('/allCoffee' , async(req , res)=>{
+       const result = await coffeeCollection.deleteMany()
+       res.send(result)
     })
     // Send a ping to confirm a successful connection
     
