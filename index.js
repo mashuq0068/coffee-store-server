@@ -28,10 +28,16 @@ async function run() {
     await client.connect();
     const database = client.db("allCoffeeDB")
     const coffeeCollection = database.collection("allCoffee")
+    const user = database.collection("user")
     app.get('/allCoffee' , async(req , res)=>{
        const cursor = coffeeCollection.find()
        const allCoffee = await cursor.toArray()
        res.send(allCoffee)
+    })
+    app.get('/user' , async(req,res)=>{
+      const cursor = user.find()
+      const result = await cursor.toArray()
+      res.send(result)
     })
     app.get('/coffee/:id' , async(req , res)=>{
        const id = req.params.id
@@ -44,6 +50,11 @@ async function run() {
         console.log(coffee)
         const result = await coffeeCollection.insertOne(coffee)
         res.send(result)
+    })
+    app.post('/user' , async(req , res) => {
+      const currentUser = req.body
+      const result = await user.insertOne(currentUser)
+      res.send(result)
     })
     app.put('/allCoffee/:id' , async(req , res)=>{
       const coffee = req.body
@@ -69,10 +80,28 @@ async function run() {
        const result = await coffeeCollection.deleteOne(query)
        res.send(result)
     })
-    app.delete('/allCoffee' , async(req , res)=>{
-       const result = await coffeeCollection.deleteMany()
+    app.delete('/user/:id' , async(req , res)=>{
+       const id = req.params.id
+       const query = {_id : new ObjectId(id)}
+       const result = await user.deleteOne(query)
        res.send(result)
     })
+    app.patch('/user' , async(req ,res) => {
+     
+      const myUser = req.body
+      const filter = {email : myUser.email}
+      const options = { upsert: true };
+      const updatedUser = {
+        $set:{
+          lastLoginTime : myUser.lastLoginTime
+        }
+  
+      }
+      const result = await user.updateOne(filter , updatedUser , options)
+      res.send(result)
+
+    })
+    
     // Send a ping to confirm a successful connection
     
     await client.db("admin").command({ ping: 1 });
